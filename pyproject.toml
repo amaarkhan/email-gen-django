@@ -1,0 +1,33 @@
+[project]
+name = "email_geneartion"
+version = "0.1.0"
+description = "email-geneartion using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.140.0,<1.0.0",
+    "yagmail>=0.15.0",
+    "PyPDF2>=3.0.0",
+    "python-docx>=0.8.11",
+    "flask>=2.0.0",
+    "flask-wtf>=1.0.0",
+    "wtforms>=3.0.0",
+    "email-validator>=2.0.0",
+    "apscheduler>=3.10.0",
+    "python-dateutil>=2.8.0"
+]
+
+[project.scripts]
+email_geneartion = "email_geneartion.main:run"
+run_crew = "email_geneartion.main:run"
+train = "email_geneartion.main:train"
+replay = "email_geneartion.main:replay"
+test = "email_geneartion.main:test"
+webapp = "email_geneartion.app:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

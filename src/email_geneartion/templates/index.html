@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-gradient text-white text-center" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                <h2 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>AI Email Generator
+                </h2>
+                <p class="mb-0">Generate professional emails with AI assistance</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('send_email_route') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.topic.id }}" class="form-label">
+                                <i class="fas fa-lightbulb me-2"></i>Email Topic
+                            </label>
+                            {{ form.topic(class="form-control", placeholder="e.g., Job Application, Meeting Request, Follow-up") }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.document.id }}" class="form-label">
+                                <i class="fas fa-file-upload me-2"></i>Upload Document for Content (Optional)
+                            </label>
+                            {{ form.document(class="form-control", accept=".txt,.pdf,.docx") }}
+                            <div class="form-text">This document will be analyzed by AI to generate email content. Supported formats: .txt, .pdf, .docx</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.attachments.id }}" class="form-label">
+                                <i class="fas fa-paperclip me-2"></i>Upload Attachments (Optional)
+                            </label>
+                            {{ form.attachments(class="form-control", multiple=True) }}
+                            <div class="form-text">These files will be attached to the email. You can also place files in the "Attach_folders" directory.</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.to_email.id }}" class="form-label">
+                                <i class="fas fa-paper-plane me-2"></i>Recipient Email
+                            </label>
+                            {{ form.to_email(class="form-control", placeholder="recipient@example.com") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.from_email.id }}" class="form-label">
+                                <i class="fas fa-user me-2"></i>Your Gmail Address
+                            </label>
+                            {{ form.from_email(class="form-control", placeholder="your.email@gmail.com") }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.app_password.id }}" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Gmail App Password
+                            </label>
+                            {{ form.app_password(class="form-control", placeholder="16-character app password") }}
+                            <div class="form-text">
+                                <a href="https://support.google.com/accounts/answer/185833" target="_blank">
+                                    How to generate Gmail App Password
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.send_now.id }}" class="form-label">
+                                <i class="fas fa-clock me-2"></i>Send Option
+                            </label>
+                            {{ form.send_now(class="form-select", onchange="toggleScheduleTime()") }}
+                        </div>
+                        <div class="col-md-6 mb-3" id="schedule-time-group" style="display: none;">
+                            <label for="{{ form.send_time.id }}" class="form-label">
+                                <i class="fas fa-calendar-alt me-2"></i>Schedule Send Time
+                            </label>
+                            {{ form.send_time(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic me-2"></i>Generate & Send Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>How it works
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-upload fa-2x text-primary mb-2"></i>
+                        <h6>1. Upload & Configure</h6>
+                        <p class="small">Upload your document and fill in the email details</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-brain fa-2x text-primary mb-2"></i>
+                        <h6>2. AI Generation</h6>
+                        <p class="small">Our AI analyzes your document and generates a professional email</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
+                        <h6>3. Send or Schedule</h6>
+                        <p class="small">Send immediately or schedule for later delivery</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleScheduleTime() {
+    const sendOption = document.getElementById('send_now');
+    const scheduleGroup = document.getElementById('schedule-time-group');
+    const sendTimeInput = document.getElementById('send_time');
+    
+    if (sendOption.value === 'schedule') {
+        scheduleGroup.style.display = 'block';
+        // Set minimum date to current time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 1); // Add 1 minute to ensure future time
+        const minDateTime = now.toISOString().slice(0, 16);
+        sendTimeInput.min = minDateTime;
+        sendTimeInput.required = true;
+    } else {
+        scheduleGroup.style.display = 'none';
+        sendTimeInput.required = false;
+        sendTimeInput.value = ''; // Clear the value when not needed
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleScheduleTime();
+    
+    // Also trigger on form submission to ensure validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const sendOption = document.getElementById('send_now');
+        const sendTimeInput = document.getElementById('send_time');
+        
+        if (sendOption.value === 'schedule' && !sendTimeInput.value) {
+            e.preventDefault();
+            alert('Please select a send time for scheduled emails');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

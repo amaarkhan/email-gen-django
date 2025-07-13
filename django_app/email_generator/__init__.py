@@ -1,0 +1,1 @@
+# Django email generator project

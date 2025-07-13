@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Scheduled Emails - Django Email Generator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                <h3 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Scheduled Emails
+                    <small class="d-block mt-1" style="font-size: 0.7em; opacity: 0.9;">Django Database Storage</small>
+                </h3>
+                {% if scheduler_status %}
+                <small class="text-light">
+                    Scheduler Status: 
+                    {% if scheduler_status.running %}
+                        <span class="badge bg-success">Running</span>
+                    {% else %}
+                        <span class="badge bg-danger">Stopped</span>
+                    {% endif %}
+                    | Jobs: {{ scheduler_status.total_jobs }} | Current Time: {{ scheduler_status.current_time|slice:":19" }}
+                </small>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if emails %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-lightbulb me-1"></i>Topic</th>
+                                    <th><i class="fas fa-user me-1"></i>Recipient</th>
+                                    <th><i class="fas fa-calendar me-1"></i>Scheduled Time</th>
+                                    <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                    <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for email in emails %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ email.topic }}</strong>
+                                        {% if email.generated_subject %}
+                                            <br><small class="text-muted">Subject: {{ email.generated_subject|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-envelope me-1"></i>{{ email.to_email }}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ email.scheduled_time|date:"Y-m-d H:i" }}
+                                    </td>
+                                    <td>
+                                        {% if email.is_scheduled %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>Scheduled
+                                            </span>
+                                        {% elif email.is_sent %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Sent
+                                            </span>
+                                        {% elif email.is_cancelled %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-times me-1"></i>Cancelled
+                                            </span>
+                                        {% elif email.is_failed %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Failed
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if email.is_scheduled %}
+                                            <a href="{% url 'emails:cancel_email' email.pk %}" 
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('Are you sure you want to cancel this email?')">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if email.is_failed and email.error_message %}
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    onclick="showError('{{ email.error_message|escapejs }}')">
+                                                <i class="fas fa-info-circle me-1"></i>View Error
+                                            </button>
+                                        {% endif %}
+                                        
+                                        {% if email.is_sent and email.sent_at %}
+                                            <small class="text-muted d-block">
+                                                Sent: {{ email.sent_at|date:"Y-m-d H:i" }}
+                                            </small>
+                                        {% endif %}
+                                        
+                                        <a href="/admin/emails/scheduledemail/{{ email.pk }}/change/" 
+                                           class="btn btn-sm btn-outline-secondary mt-1"
+                                           target="_blank">
+                                            <i class="fas fa-edit me-1"></i>Admin
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No scheduled emails</h5>
+                        <p class="text-muted">You haven't scheduled any emails yet.</p>
+                        <a href="{% url 'emails:index' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Schedule an Email
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-database fa-2x text-success mb-2"></i>
+                        <h6>Django Models</h6>
+                        <p class="small text-muted">Emails stored in SQLite database with full audit trail</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-sync fa-2x text-primary mb-2"></i>
+                        <h6>Auto Refresh</h6>
+                        <p class="small text-muted">Page refreshes every 30 seconds to show latest status</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                        <h6>Admin Panel</h6>
+                        <p class="small text-muted">Full admin interface for email management</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6><i class="fas fa-tools me-2"></i>Debug URLs:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled small">
+                                    <li><a href="{% url 'emails:debug_scheduler' %}" target="_blank">🔍 Scheduler Debug (JSON)</a></li>
+                                    <li><a href="{% url 'emails:test_scheduler' %}" target="_blank">🧪 Test Scheduler</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled small">
+                                    <li><a href="/admin/emails/scheduledemail/" target="_blank">⚙️ Admin Panel</a></li>
+                                    <li><a href="/admin/emails/emailattachment/" target="_blank">📎 Attachments Admin</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Error Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showError(error) {
+    document.getElementById('errorMessage').textContent = error;
+    new bootstrap.Modal(document.getElementById('errorModal')).show();
+}
+
+// Auto refresh every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Add countdown timer
+let countdown = 30;
+function updateCountdown() {
+    const timer = document.getElementById('refresh-timer');
+    if (timer) {
+        timer.textContent = countdown;
+        countdown--;
+        if (countdown < 0) {
+            countdown = 30;
+        }
+    }
+}
+
+// Show countdown in page title
+setInterval(updateCountdown, 1000);
+</script>
+{% endblock %}

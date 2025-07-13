@@ -1,0 +1,26 @@
+extract_doc_task:
+  description: >
+    Read and analyze the document content provided in the doc_text input.
+    Extract all key information relevant to the email topic: {topic}, including names, dates, purpose, and any important context.
+    Document content: {doc_text}
+    Ensure no critical detail is missed that could affect the completeness of the email.
+  expected_output: >
+    A structured summary of extracted information from the document, ready to be used as content for writing a complete, ready-to-send email.
+  agent: doc_extractor
+
+generate_email_task:
+  description: >
+    Write a professional, complete email using the topic: {topic} and the extracted document information.
+    Include everything: subject, greeting, detailed body, and a proper closing.
+    The email must be 100% ready to send, with no placeholders or blanks left to fill.
+    Replace any placeholder text like [Company Name], [Your Name], or [Position] with appropriate content from the document.
+    Use specific details from the document to make the email complete and personalized.
+    Current year: {current_year}
+  expected_output: >
+    A polished, formal email including subject, greeting, complete body with context, and proper closing.
+    No placeholders, brackets, or unfinished parts should exist in the email.
+    All information should be filled in with actual details from the document.
+    Format: Subject: [email subject]
+    [blank line]
+    [email body]
+  agent: email_writer
